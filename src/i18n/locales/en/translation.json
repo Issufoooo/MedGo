@@ -1,0 +1,54 @@
+{
+  "brand": {
+    "name": "MedGo",
+    "tagline": "Medications delivered to your door",
+    "taglineSub": "In Maputo and Matola",
+    "description": "Order your medications online and receive them at home. Fast, safe and hassle-free."
+  },
+  "nav": {
+    "home": "Home",
+    "medications": "Medications",
+    "howItWorks": "How It Works",
+    "contact": "Contact",
+    "orderNow": "Order Now",
+    "trackOrder": "Track Order",
+    "internalAccess": "Internal Access"
+  },
+  "search": {
+    "placeholder": "Search medication name, generic or alias...",
+    "searching": "Searching...",
+    "noResults": "No medications found for",
+    "typeToSearch": "Type at least 2 characters to search"
+  },
+  "medication": {
+    "category": {
+      "FREE": "Over the Counter",
+      "PRESCRIPTION": "Prescription Required",
+      "RESTRICTED_MONITORED": "Restricted Sale"
+    },
+    "requiresPrescription": "This medication requires a valid prescription",
+    "doesNotRequire": "No prescription required"
+  },
+  "order": {
+    "status": {
+      "NEW": "Order received",
+      "PRESCRIPTION_PENDING": "Awaiting prescription",
+      "IN_VALIDATION": "Under review",
+      "AWAITING_PHARMACY": "Confirming availability",
+      "AWAITING_CLIENT": "Awaiting your confirmation",
+      "CONFIRMED": "Confirmed",
+      "IN_PREPARATION": "Preparing",
+      "IN_DELIVERY": "Out for delivery",
+      "DELIVERED": "Delivered",
+      "CANCELLED": "Cancelled"
+    }
+  },
+  "common": {
+    "loading": "Loading...",
+    "save": "Save",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "back": "Back",
+    "close": "Close"
+  }
+}

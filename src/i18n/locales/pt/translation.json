@@ -1,0 +1,128 @@
+{
+  "brand": {
+    "name": "MedGo",
+    "tagline": "Medicamentos ao seu domicílio",
+    "taglineSub": "Maputo & Matola",
+    "description": "Solicite os seus medicamentos online e receba em casa. Rápido, discreto e sem complicações."
+  },
+  "nav": {
+    "home": "Início",
+    "medications": "Medicamentos",
+    "orderNow": "Solicitar Agora",
+    "internalAccess": "Acesso Interno"
+  },
+  "search": {
+    "placeholder": "Nome do medicamento, genérico ou alias...",
+    "searching": "A pesquisar...",
+    "noResults": "Nenhum resultado para",
+    "typeToSearch": "Escreva pelo menos 2 letras para pesquisar",
+    "viewAll": "Ver todos os resultados"
+  },
+  "medication": {
+    "category": {
+      "FREE": "Venda Livre",
+      "PRESCRIPTION": "Receita Obrigatória",
+      "RESTRICTED_MONITORED": "Venda Restrita"
+    },
+    "requiresPrescription": "Este medicamento requer receita médica",
+    "doesNotRequire": "Não requer receita médica"
+  },
+  "order": {
+    "title": "Solicitar Medicamento",
+    "subtitle": "Preencha os seus dados para fazer o pedido",
+    "status": {
+      "NEW": "Pedido recebido",
+      "PRESCRIPTION_PENDING": "A aguardar receita",
+      "IN_VALIDATION": "Em validação",
+      "AWAITING_PHARMACY": "A confirmar farmácia",
+      "AWAITING_CLIENT": "Aguarda a sua confirmação",
+      "CONFIRMED": "Confirmado",
+      "IN_PREPARATION": "Em preparação",
+      "IN_DELIVERY": "Em entrega",
+      "DELIVERED": "Entregue",
+      "CANCELLED": "Cancelado"
+    },
+    "statusDesc": {
+      "NEW": "Recebemos o seu pedido e estamos a analisá-lo.",
+      "PRESCRIPTION_PENDING": "Precisamos da sua receita médica para continuar.",
+      "IN_VALIDATION": "A nossa equipa está a verificar o seu pedido.",
+      "AWAITING_PHARMACY": "A confirmar disponibilidade na farmácia.",
+      "AWAITING_CLIENT": "Enviámos o preço final. Por favor confirme para continuar.",
+      "CONFIRMED": "Pedido confirmado! Estamos a preparar a entrega.",
+      "IN_PREPARATION": "O motoboy foi atribuído e vai buscar o medicamento.",
+      "IN_DELIVERY": "O motoboy está a caminho! Esteja disponível para receber.",
+      "DELIVERED": "Entrega concluída. Obrigado por confiar na MedGo!",
+      "CANCELLED": "O seu pedido foi cancelado."
+    },
+    "payment": {
+      "MPESA": "M-Pesa",
+      "EMOLA": "e-Mola",
+      "CASH_ON_DELIVERY": "Dinheiro na entrega",
+      "POS": "POS"
+    }
+  },
+  "prescription": {
+    "required": "Este medicamento requer receita médica válida.",
+    "instructions": "Tire uma foto nítida ou envie o PDF. Certifique-se que o texto está legível.",
+    "uploadButton": "Escolher ficheiro",
+    "cameraButton": "Tirar foto",
+    "fileSelected": "Ficheiro pronto",
+    "remove": "Remover e escolher outro",
+    "errorType": "Tipo não suportado. Use JPG, PNG ou PDF.",
+    "errorSize": "Ficheiro demasiado grande. Máximo 10MB.",
+    "privacy": "A sua receita é tratada com confidencialidade e eliminada após validação."
+  },
+  "tracking": {
+    "title": "O seu pedido",
+    "subtitle": "Acompanhe em tempo real",
+    "medication": "Medicamento",
+    "total": "Total",
+    "paymentMethod": "Pagamento",
+    "timeline": "Histórico",
+    "whatsappSupport": "Falar connosco",
+    "lastUpdated": "Actualizado",
+    "cancelled": "Pedido cancelado",
+    "cancellationReason": "Motivo do cancelamento",
+    "notFound": "Pedido não encontrado",
+    "notFoundDesc": "Verifique o link ou contacte-nos via WhatsApp."
+  },
+  "cancel": {
+    "title": "Cancelar pedido",
+    "message": "Tem a certeza que deseja cancelar este pedido?",
+    "cannotCancel": "Este pedido já não pode ser cancelado — está em processamento.",
+    "confirm": "Sim, cancelar",
+    "back": "Voltar",
+    "success": "Pedido cancelado.",
+    "error": "Não foi possível cancelar."
+  },
+  "errors": {
+    "required": "Campo obrigatório",
+    "invalidPhone": "Número de telefone inválido",
+    "generic": "Ocorreu um erro. Tente novamente.",
+    "networkError": "Erro de ligação. Verifique a sua internet."
+  },
+  "common": {
+    "loading": "A carregar...",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "confirm": "Confirmar",
+    "back": "Voltar",
+    "close": "Fechar",
+    "search": "Pesquisar",
+    "all": "Todos",
+    "status": "Estado",
+    "name": "Nome",
+    "phone": "Telefone",
+    "notes": "Notas",
+    "price": "Preço",
+    "total": "Total",
+    "zone": "Zona",
+    "submit": "Enviar",
+    "actions": "Acções",
+    "details": "Ver detalhes"
+  },
+  "footer": {
+    "rights": "Todos os direitos reservados.",
+    "hours": "Seg–Sáb, 08h–20h"
+  }
+}

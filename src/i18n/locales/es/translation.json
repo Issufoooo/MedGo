@@ -1,0 +1,52 @@
+{
+  "brand": {
+    "name": "MedGo",
+    "tagline": "Medicamentos a domicilio",
+    "taglineSub": "En Maputo y Matola",
+    "description": "Solicite sus medicamentos en línea y recíbalos en casa. Rápido, seguro y sin complicaciones."
+  },
+  "nav": {
+    "home": "Inicio",
+    "medications": "Medicamentos",
+    "howItWorks": "Cómo Funciona",
+    "contact": "Contacto",
+    "orderNow": "Hacer Pedido",
+    "trackOrder": "Seguir Pedido",
+    "internalAccess": "Acceso Interno"
+  },
+  "search": {
+    "placeholder": "Busque un medicamento...",
+    "searching": "Buscando...",
+    "noResults": "No se encontraron medicamentos para",
+    "typeToSearch": "Escriba al menos 2 letras para buscar"
+  },
+  "medication": {
+    "category": {
+      "FREE": "Venta Libre",
+      "PRESCRIPTION": "Receta Obligatoria",
+      "RESTRICTED_MONITORED": "Venta Restringida"
+    }
+  },
+  "order": {
+    "status": {
+      "NEW": "Pedido recibido",
+      "PRESCRIPTION_PENDING": "Esperando receta",
+      "IN_VALIDATION": "En validación",
+      "AWAITING_PHARMACY": "Confirmando farmacia",
+      "AWAITING_CLIENT": "Esperando confirmación",
+      "CONFIRMED": "Confirmado",
+      "IN_PREPARATION": "En preparación",
+      "IN_DELIVERY": "En camino",
+      "DELIVERED": "Entregado",
+      "CANCELLED": "Cancelado"
+    }
+  },
+  "common": {
+    "loading": "Cargando...",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "confirm": "Confirmar",
+    "back": "Volver",
+    "close": "Cerrar"
+  }
+}

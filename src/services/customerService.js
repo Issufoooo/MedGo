@@ -54,8 +54,11 @@ export async function getCustomerByWhatsApp(whatsappNumber) {
 export async function getCustomers({ page = 1, pageSize = 20, search = '' } = {}) {
   let query = supabase
     .from('customers')
-    .select('*, orders(count)', { count: 'exact' })
-    .order('last_order_at', { ascending: false })
+    .select(
+      '*, zone:delivery_zones(name), orders(count)',
+      { count: 'exact' }
+    )
+    .order('last_order_at', { ascending: false, nullsFirst: false })
     .range((page - 1) * pageSize, page * pageSize - 1)
 
   if (search) {

@@ -124,12 +124,6 @@ export const PAYMENT_METHOD_LABELS = {
   POS:              'POS',
 }
 
-export const PAYMENT_METHOD_ICONS = {
-  MPESA:            '📱',
-  EMOLA:            '💳',
-  CASH_ON_DELIVERY: '💵',
-  POS:              '🖥️',
-}
 
 // ── ROLES ─────────────────────────────────────────────────────
 export const USER_ROLE = {

@@ -13,8 +13,74 @@ const STATUS_DOT = {
   CONFIRMED:'bg-teal-500', IN_PREPARATION:'bg-indigo-400', IN_DELIVERY:'bg-cyan-400',
   DELIVERED:'bg-green-500', CANCELLED:'bg-red-400',
 }
-const PAY_ICON = { MPESA:'📱', EMOLA:'💳', CASH_ON_DELIVERY:'💵', POS:'🖥️' }
+
 const fmt = v => v ? new Intl.NumberFormat('pt-MZ',{style:'currency',currency:'MZN',minimumFractionDigits:0}).format(v) : null
+
+// ── SVG payment icons ─────────────────────────────────────────
+
+function IconMpesa() {
+  return (
+    <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+      <rect x="5" y="2" width="14" height="20" rx="2"/>
+      <path d="M12 18h.01"/>
+    </svg>
+  )
+}
+function IconCard() {
+  return (
+    <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+      <rect x="2" y="5" width="20" height="14" rx="2"/>
+      <path d="M2 10h20"/>
+    </svg>
+  )
+}
+function IconCash() {
+  return (
+    <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+      <rect x="2" y="6" width="20" height="12" rx="1"/>
+      <circle cx="12" cy="12" r="2"/>
+      <path d="M6 12h.01M18 12h.01"/>
+    </svg>
+  )
+}
+function IconPos() {
+  return (
+    <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+      <rect x="4" y="3" width="16" height="18" rx="2"/>
+      <path d="M8 7h8M8 11h4M8 15h2"/>
+    </svg>
+  )
+}
+function IconPin() {
+  return (
+    <svg className="w-3 h-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+    </svg>
+  )
+}
+function IconRx() {
+  return (
+    <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+    </svg>
+  )
+}
+function IconWarning() {
+  return (
+    <svg className="w-3 h-3" viewBox="0 0 20 20" fill="currentColor">
+      <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd"/>
+    </svg>
+  )
+}
+
+const PAY_ICON = {
+  MPESA:            <IconMpesa />,
+  EMOLA:            <IconCard />,
+  CASH_ON_DELIVERY: <IconCash />,
+  POS:              <IconPos />,
+}
+const PAY_LABEL = { MPESA:'M-Pesa', EMOLA:'e-Mola', CASH_ON_DELIVERY:'Dinheiro', POS:'POS' }
 
 function timeAgo(iso) {
   if (!iso) return ''
@@ -45,11 +111,15 @@ export function OrderCard({ order }) {
             </span>
             {/* Blacklist warning */}
             {order.customer?.is_blacklisted && (
-              <span className="badge-sm bg-red-600 text-white">⚠️ Lista negra</span>
+              <span className="inline-flex items-center gap-1 badge-sm bg-red-600 text-white">
+                <IconWarning /> Lista negra
+              </span>
             )}
             {/* Prescription pending */}
             {order.prescription_status === 'PENDING' && (
-              <span className="badge-sm bg-amber-100 text-amber-700">📋 Receita</span>
+              <span className="inline-flex items-center gap-1 badge-sm bg-amber-100 text-amber-700">
+                <IconRx /> Receita
+              </span>
             )}
           </div>
           <p className="font-extrabold text-slate-900 text-sm leading-tight truncate">
@@ -75,14 +145,15 @@ export function OrderCard({ order }) {
       {/* Footer row */}
       <div className="flex items-center gap-3 pt-2.5 border-t border-slate-50">
         {order.payment_method && (
-          <span className="text-xs text-slate-400 flex items-center gap-1">
-            {PAY_ICON[order.payment_method]}
-            {{ MPESA:'M-Pesa', EMOLA:'e-Mola', CASH_ON_DELIVERY:'Dinheiro', POS:'POS' }[order.payment_method]}
+          <span className="text-xs text-slate-400 flex items-center gap-1.5">
+            <span className="text-slate-400">{PAY_ICON[order.payment_method]}</span>
+            {PAY_LABEL[order.payment_method]}
           </span>
         )}
         {order.delivery_address && (
-          <span className="text-xs text-slate-400 truncate flex-1 min-w-0">
-            📍 {order.delivery_address}
+          <span className="text-xs text-slate-400 truncate flex-1 min-w-0 flex items-center gap-1">
+            <IconPin />
+            <span className="truncate">{order.delivery_address}</span>
           </span>
         )}
         <svg className="w-4 h-4 text-slate-300 shrink-0 ml-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">

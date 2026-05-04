@@ -52,6 +52,25 @@ const SYSTEM_FIELDS = [
   { key: 'operation_name',      label: 'Nome da operação',            placeholder: 'MedGo', type: 'text', hint: 'Nome usado nas mensagens automáticas.' },
 ]
 
+const MAP_FIELDS = [
+  { key: 'map_reference_lat',   label: 'Latitude da sede',            placeholder: '-25.9650', type: 'text', hint: 'Latitude do ponto de referência central (ex: -25.9650).' },
+  { key: 'map_reference_lng',   label: 'Longitude da sede',           placeholder: '32.5699',  type: 'text', hint: 'Longitude do ponto de referência central (ex: 32.5699).' },
+  { key: 'map_reference_label', label: 'Nome do ponto de referência', placeholder: 'MedGo HQ', type: 'text', hint: 'Nome exibido no mapa junto ao marcador da sede.' },
+]
+
+const PAYMENT_PROVIDERS = [
+  { value: '',           label: 'Sem gateway (manual)' },
+  { value: 'mpesa_api',  label: 'M-Pesa API (Vodacom MZ)' },
+  { value: 'emola_api',  label: 'e-Mola API (Telecel MZ)' },
+  { value: 'paydunya',   label: 'PayDunya' },
+]
+
+const PAYMENT_FIELDS = [
+  { key: 'payment_gateway_api_key',       label: 'API Key / Client Secret', placeholder: '••••••••••••', type: 'password', hint: 'Chave de acesso fornecida pelo gateway de pagamento.' },
+  { key: 'payment_gateway_merchant_code', label: 'Código do comerciante',   placeholder: 'MER-12345',    type: 'text',     hint: 'Service Provider Code ou Merchant ID atribuído ao negócio.' },
+  { key: 'payment_gateway_webhook_secret',label: 'Webhook Secret',          placeholder: '••••••••••••', type: 'password', hint: 'Chave para validar callbacks recebidos do gateway.' },
+]
+
 function TemplateEditor({ def, value, onChange }) {
   const [expanded, setExpanded] = useState(false)
   const current = value || def.default
@@ -246,12 +265,44 @@ export function SystemConfigPage() {
             </div>
           </div>
 
+          {/* Map reference point */}
+          <div className="space-y-4">
+            <div>
+              <h2 className="text-lg font-extrabold text-slate-900 mb-1">Ponto de referência do mapa</h2>
+              <p className="text-sm text-slate-500">
+                Coordenadas da sede MedGo — usadas para calcular distâncias e taxas de entrega automaticamente.
+                Pode também arrastar o marcador directamente na página de Zonas.
+              </p>
+            </div>
+
+            <div className="card p-5 space-y-4">
+              {MAP_FIELDS.map(field => (
+                <div key={field.key}>
+                  <label className="label">{field.label}</label>
+                  <input
+                    type={field.type}
+                    value={configMap[field.key] || ''}
+                    onChange={e => setVal(field.key, e.target.value)}
+                    placeholder={field.placeholder}
+                    className="input"
+                  />
+                  <p className="label-hint">{field.hint}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
           {/* WhatsApp templates */}
           <div className="space-y-4">
             <div>
               <h2 className="text-lg font-extrabold text-slate-900 mb-1">Templates de mensagens</h2>
               <p className="text-sm text-slate-500">
-                Personalize as mensagens enviadas em cada etapa do pedido. Clique para expandir e editar.
+                Personalize as mensagens enviadas em cada etapa do pedido.
+                As variáveis disponíveis são: <code className="text-xs bg-slate-100 px-1 rounded">{'{nome_cliente}'}</code>,{' '}
+                <code className="text-xs bg-slate-100 px-1 rounded">{'{medicamento}'}</code>,{' '}
+                <code className="text-xs bg-slate-100 px-1 rounded">{'{link_tracking}'}</code>,{' '}
+                <code className="text-xs bg-slate-100 px-1 rounded">{'{preco_total}'}</code>,{' '}
+                <code className="text-xs bg-slate-100 px-1 rounded">{'{motivo}'}</code>.
               </p>
             </div>
 
@@ -264,6 +315,72 @@ export function SystemConfigPage() {
                   onChange={val => setVal(def.key, val)}
                 />
               ))}
+            </div>
+          </div>
+
+          {/* Payment gateway */}
+          <div className="space-y-4">
+            <div>
+              <h2 className="text-lg font-extrabold text-slate-900 mb-1">Gateway de pagamento</h2>
+              <p className="text-sm text-slate-500">
+                Configure a integração com M-Pesa ou e-Mola para automatizar a cobrança.
+                Sem gateway configurado, os pagamentos são confirmados manualmente pelo operador.
+              </p>
+            </div>
+
+            <div className="card p-5 space-y-4">
+              <div>
+                <label className="label">Fornecedor</label>
+                <select
+                  value={configMap['payment_gateway_provider'] || ''}
+                  onChange={e => setVal('payment_gateway_provider', e.target.value)}
+                  className="input"
+                >
+                  {PAYMENT_PROVIDERS.map(p => (
+                    <option key={p.value} value={p.value}>{p.label}</option>
+                  ))}
+                </select>
+                <p className="label-hint">Seleccione o gateway de pagamento a usar nas cobranças automáticas.</p>
+              </div>
+
+              <div>
+                <label className="label">Ambiente</label>
+                <select
+                  value={configMap['payment_gateway_environment'] || 'sandbox'}
+                  onChange={e => setVal('payment_gateway_environment', e.target.value)}
+                  className="input"
+                >
+                  <option value="sandbox">Sandbox (testes)</option>
+                  <option value="production">Produção</option>
+                </select>
+                <p className="label-hint text-orange-600 font-semibold">Altere para "Produção" apenas depois de testar completamente no sandbox.</p>
+              </div>
+
+              {PAYMENT_FIELDS.map(field => (
+                <div key={field.key}>
+                  <label className="label">{field.label}</label>
+                  <input
+                    type={field.type}
+                    value={configMap[field.key] || ''}
+                    onChange={e => setVal(field.key, e.target.value)}
+                    placeholder={field.placeholder}
+                    className="input"
+                  />
+                  <p className="label-hint">{field.hint}</p>
+                </div>
+              ))}
+
+              {!configMap['payment_gateway_provider'] && (
+                <div className="flex items-start gap-3 rounded-xl bg-slate-50 border border-slate-200 px-4 py-3">
+                  <svg className="w-4 h-4 text-slate-400 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                  </svg>
+                  <p className="text-xs text-slate-500">
+                    Sem gateway activo, o operador confirma manualmente cada pagamento na página do pedido.
+                    O sistema funciona normalmente — o gateway é opcional.
+                  </p>
+                </div>
+              )}
             </div>
           </div>
 

@@ -42,9 +42,9 @@ const KPI_CARDS = [
 
 const MANAGEMENT_AREAS = [
   { to:'/dono/cancelamentos', title:'Cancelamentos', desc:'Pedidos que exigem aprovação do dono.', state:'Pronto', tone:'orange', Icon:IconCancel },
-  { to:'/dono/medicamentos', title:'Medicamentos', desc:'Catálogo, categorias e visibilidade.', state:'Parcial', tone:'teal', Icon:IconMedicine },
+  { to:'/dono/medicamentos', title:'Medicamentos', desc:'Catálogo, categorias e visibilidade.', state:'Pronto', tone:'teal', Icon:IconMedicine },
   { to:'/dono/farmacias', title:'Farmácias', desc:'Parceiros, contactos e notas operacionais.', state:'Pronto', tone:'blue', Icon:IconPharmacy },
-  { to:'/dono/zonas', title:'Zonas e taxas', desc:'Cobertura e regras de entrega por zona.', state:'Parcial', tone:'green', Icon:IconMap },
+  { to:'/dono/zonas', title:'Zonas e taxas', desc:'Cobertura e regras de entrega por distância.', state:'Pronto', tone:'green', Icon:IconMap },
   { to:'/dono/utilizadores', title:'Utilizadores', desc:'Gestão de acessos da equipa.', state:'Em preparação', tone:'violet', Icon:IconUsers },
   { to:'/dono/configuracoes', title:'Configurações', desc:'WhatsApp templates, números e parâmetros globais.', state:'Pronto', tone:'slate', Icon:IconSettings },
   { to:'/dashboard', title:'Operação', desc:'Ver o painel do operador e pedidos activos.', state:'Pronto', tone:'indigo', Icon:IconOrders },
@@ -131,7 +131,7 @@ export function OwnerDashboard() {
         .from('orders')
         .select('total_price')
         .eq('status', 'DELIVERED')
-        .gte('updated_at', today.toISOString())
+        .gte('delivered_at', today.toISOString())   // use delivered_at — accurate delivery date
         .not('total_price', 'is', null)
       return (data || []).reduce((sum, row) => sum + (parseFloat(row.total_price) || 0), 0)
     },

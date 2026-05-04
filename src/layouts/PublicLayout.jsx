@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link, NavLink, useLocation, Outlet } from 'react-router-dom'
 import { MedGoLogo } from '../components/shared/MedGoLogo'
+import { useWhatsAppUrl } from '../hooks/useSystemConfig'
 
 function MenuIcon() {
   return (
@@ -46,6 +47,7 @@ export function PublicLayout() {
   const [menuOpen, setMenuOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const location = useLocation()
+  const waUrl = useWhatsAppUrl()
 
   useEffect(() => {
     setMenuOpen(false)
@@ -145,10 +147,12 @@ export function PublicLayout() {
               <div className="space-y-2.5 text-sm">
                 <Link to="/medicamentos" className="block hover:text-white transition-colors">Medicamentos</Link>
                 <Link to="/login" className="block hover:text-white transition-colors">Área da equipa</Link>
-                <a href="https://wa.me/258XXXXXXXXX" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-green-400 hover:text-green-300 transition-colors font-semibold">
-                  <WhatsAppIcon />
-                  Falar no WhatsApp
-                </a>
+                {waUrl && (
+                  <a href={waUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-green-400 hover:text-green-300 transition-colors font-semibold">
+                    <WhatsAppIcon />
+                    Falar no WhatsApp
+                  </a>
+                )}
               </div>
             </div>
           </div>

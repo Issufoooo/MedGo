@@ -1,7 +1,7 @@
 {
   "name": "medgo",
   "private": true,
-  "version": "1.0.0",
+  "version": "7.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -13,9 +13,11 @@
     "@supabase/supabase-js": "^2.39.0",
     "@tanstack/react-query": "^5.17.0",
     "i18next": "^23.7.0",
+    "leaflet": "^1.9.4",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-i18next": "^14.0.0",
+    "react-leaflet": "^4.2.1",
     "react-router-dom": "^6.21.0",
     "zustand": "^4.4.0"
   },

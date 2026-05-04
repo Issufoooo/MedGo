@@ -30,10 +30,10 @@ const SystemConfigPage   = lazy(() => import('./pages/owner/SystemConfigPage').t
 const MotoboyDashboard   = lazy(() => import('./pages/motoboy/MotoboyDashboard').then(m=>({default:m.MotoboyDashboard})))
 const StockManagerDashboard = lazy(() => import('./pages/stock/StockManagerDashboard').then(m=>({default:m.StockManagerDashboard})))
 
-// Placeholders
-const CustomerListPage       = lazy(() => import('./pages/Placeholders').then(m=>({default:m.CustomerListPage})))
-const MedicationsCatalogPage = lazy(() => import('./pages/Placeholders').then(m=>({default:m.MedicationsCatalogPage})))
-const ZonesPage              = lazy(() => import('./pages/Placeholders').then(m=>({default:m.ZonesPage})))
+// Implemented pages (v7)
+const CustomerListPage       = lazy(() => import('./pages/operator/CustomerListPage').then(m=>({default:m.CustomerListPage})))
+const MedicationsCatalogPage = lazy(() => import('./pages/owner/MedicationsCatalogPage').then(m=>({default:m.MedicationsCatalogPage})))
+const ZonesPage              = lazy(() => import('./pages/owner/ZonesPage').then(m=>({default:m.ZonesPage})))
 const NotFoundPage           = lazy(() => import('./pages/Placeholders').then(m=>({default:m.NotFoundPage})))
 
 function Loader() {

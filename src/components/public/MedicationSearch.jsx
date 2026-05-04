@@ -4,9 +4,9 @@ import { supabase } from '../../lib/supabase'
 import { CategoryBadge } from '../ui/Badge'
 import { Spinner } from '../ui/Spinner'
 
-export function MedicationSearch({ size = 'lg', autoFocus = false }) {
+export function MedicationSearch({ size = 'lg', autoFocus = false, initialQuery = '' }) {
   const navigate = useNavigate()
-  const [query, setQuery] = useState('')
+  const [query, setQuery] = useState(initialQuery)
   const [results, setResults] = useState([])
   const [loading, setLoading] = useState(false)
   const [open, setOpen] = useState(false)

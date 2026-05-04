@@ -2,7 +2,7 @@ const SEVERITY_CFG = {
   LOW:     { cls: 'bg-yellow-50 border-yellow-300', title: 'text-yellow-800', dot: 'bg-yellow-400', label: 'Nível Baixo'    },
   MEDIUM:  { cls: 'bg-orange-50 border-orange-300', title: 'text-orange-800', dot: 'bg-orange-400', label: 'Nível Médio'    },
   HIGH:    { cls: 'bg-red-50    border-red-300',    title: 'text-red-800',    dot: 'bg-red-500',    label: 'Nível Alto'     },
-  BLOCKED: { cls: 'bg-red-100   border-red-500',    title: 'text-red-900',    dot: 'bg-red-600',    label: '⛔ BLOQUEADO'  },
+  BLOCKED: { cls: 'bg-red-100   border-red-500',    title: 'text-red-900',    dot: 'bg-red-600',    label: 'BLOQUEADO'    },
 }
 
 export function BlacklistAlert({ entry }) {

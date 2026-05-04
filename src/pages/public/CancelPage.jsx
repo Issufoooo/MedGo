@@ -7,12 +7,22 @@ import { Alert } from '../../components/ui/Alert'
 import { CUSTOMER_CANCELLABLE_STATES } from '../../lib/constants'
 import { auditLog } from '../../services/auditService'
 import { sendNotification } from '../../services/notificationService'
+import { useWhatsAppUrl } from '../../hooks/useSystemConfig'
+
+function WarningIcon() {
+  return (
+    <svg className="w-10 h-10 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+    </svg>
+  )
+}
 
 export function CancelPage() {
   const { token } = useParams()
   const navigate = useNavigate()
   const [cancelling, setCancelling] = useState(false)
   const [error, setError] = useState('')
+  const waUrl = useWhatsAppUrl()
 
   const { data: order, isLoading } = useQuery({
     queryKey: ['cancel-tracking', token],
@@ -59,7 +69,9 @@ export function CancelPage() {
     <div className="page-wrap-sm py-16">
       <div className="card p-8 max-w-sm mx-auto">
         <div className="text-center mb-6">
-          <div className="text-5xl mb-3">⚠️</div>
+          <div className="w-16 h-16 rounded-2xl bg-orange-50 flex items-center justify-center mx-auto mb-3">
+            <WarningIcon />
+          </div>
           <h1 className="text-xl font-extrabold text-slate-900">Cancelar pedido</h1>
         </div>
 
@@ -70,6 +82,12 @@ export function CancelPage() {
             <Alert type="warning" title="Não é possível cancelar">
               Este pedido já está em processamento avançado e não pode ser cancelado pelo cliente. Contacte-nos via WhatsApp.
             </Alert>
+            {waUrl && (
+              <a href={waUrl} target="_blank" rel="noopener noreferrer"
+                className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-green-500 px-5 py-3 text-white font-semibold hover:bg-green-600 transition-colors">
+                Falar no WhatsApp
+              </a>
+            )}
             <Link to={`/acompanhar/${token}`} className="btn-secondary w-full py-3 flex justify-center">← Voltar</Link>
           </div>
         ) : (

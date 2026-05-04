@@ -49,8 +49,10 @@ export function PrescriptionUpload({ onChange }) {
           onDrop={e => { e.preventDefault(); setDragOver(false); const f = e.dataTransfer.files[0]; if (f) processFile(f) }}
           className={`drop-zone p-7 text-center ${dragOver ? 'drop-zone-active' : ''}`}
         >
-          <div className="w-14 h-14 bg-white border-2 border-slate-200 rounded-2xl flex items-center justify-center text-3xl mx-auto mb-4 shadow-xs">
-            📋
+          <div className="w-14 h-14 bg-white border-2 border-slate-200 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-xs">
+            <svg className="w-7 h-7 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+            </svg>
           </div>
           <p className="text-sm font-semibold text-slate-700 mb-1">
             Arraste aqui ou escolha um ficheiro
@@ -98,7 +100,11 @@ export function PrescriptionUpload({ onChange }) {
             <img src={preview.src} alt="Receita" className="max-h-52 w-full object-contain rounded-xl border border-teal-100" />
           ) : (
             <div className="flex items-center gap-3 p-3 bg-white rounded-xl border border-teal-100">
-              <div className="w-10 h-10 bg-red-50 rounded-xl flex items-center justify-center text-xl shrink-0">📄</div>
+              <div className="w-10 h-10 bg-slate-50 rounded-xl border border-slate-200 flex items-center justify-center shrink-0">
+                <svg className="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                </svg>
+              </div>
               <div className="min-w-0">
                 <p className="text-sm font-semibold text-slate-800 truncate">{preview?.name}</p>
                 <p className="text-xs text-slate-400 mt-0.5">{(file.size / 1024 / 1024).toFixed(2)} MB</p>

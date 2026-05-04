@@ -1,100 +1,127 @@
+// ─────────────────────────────────────────────────────────────
+// MedGo — Notification Service (WhatsApp)
+// Templates read from system_config — owner can edit in UI.
+// Fallback to defaults if not configured.
+// Token read from system_config.whatsapp_api_token.
+// ─────────────────────────────────────────────────────────────
+
 import { supabase } from '../lib/supabase'
 
-/**
- * Get a system config value by key.
- */
-async function getConfig(key) {
+// ── Config reader ─────────────────────────────────────────────
+
+async function getWhatsAppConfig() {
   const { data } = await supabase
     .from('system_config')
-    .select('value')
-    .eq('key', key)
-    .single()
-  return data?.value || null
+    .select('key, value')
+    .in('key', [
+      'whatsapp_api_url',
+      'whatsapp_api_token',
+      'whatsapp_number',
+      'whatsapp_template_order_created',
+      'whatsapp_template_price_confirmation',
+      'whatsapp_template_dispatched',
+      'whatsapp_template_delivered',
+      'whatsapp_template_cancelled',
+    ])
+
+  return Object.fromEntries((data || []).map(r => [r.key, r.value]))
 }
 
-/**
- * WhatsApp message templates.
- * These are defaults — can be overridden via system_config in the future.
- */
-const TEMPLATES = {
-  order_created: ({ order, customer, trackingUrl }) =>
-    `Olá ${customer.full_name}! 👋\n\nO seu pedido de *${order.medication_name_snapshot}* foi recebido com sucesso.\n\n` +
-    `Acompanhe o estado aqui: ${trackingUrl}\n\n_MedGo — Medicamentos ao seu domicílio_`,
-
-  prescription_requested: ({ customer }) =>
-    `Olá ${customer.full_name},\n\nNão conseguimos ler a sua receita médica. Por favor envie uma nova foto mais nítida.\n\n` +
-    `Tem *30 minutos* para reenviar, caso contrário o pedido será cancelado.\n\n_MedGo_`,
-
-  price_confirmation: ({ customer, order, trackingUrl }) =>
-    `Olá ${customer.full_name}! ✅\n\nO seu pedido está confirmado!\n\n` +
-    `💊 *${order.medication_name_snapshot}*\n` +
-    `💵 Medicamento: ${formatMZN(order.medication_price)}\n` +
-    `🛵 Entrega: ${formatMZN(order.delivery_fee)}\n` +
-    `💰 *Total: ${formatMZN(order.total_price)}*\n\n` +
-    `Responda *SIM* para confirmar ou *NÃO* para cancelar.\n` +
-    `Tem 30 minutos para responder.\n\n` +
-    `Acompanhe aqui: ${trackingUrl}`,
-
-  order_dispatched: ({ customer }) =>
-    `O seu pedido está a caminho! 🛵\n\nO motoboy já saiu com o seu medicamento. Esteja disponível para receber.\n\n_MedGo_`,
-
-  order_delivered: ({ customer, order }) =>
-    `Entrega concluída! ✅\n\nO seu medicamento *${order.medication_name_snapshot}* foi entregue.\n\nObrigado por confiar na MedGo! 💙`,
-
-  order_cancelled: ({ customer, order }) =>
-    `O seu pedido de *${order.medication_name_snapshot}* foi cancelado.\n\n` +
-    `Motivo: ${order.cancellation_reason || 'Não especificado'}\n\n` +
-    `Em caso de dúvida, contacte-nos. _MedGo_`,
+// ── Template key mapping ──────────────────────────────────────
+// service key  → system_config key
+const TEMPLATE_CONFIG_KEY = {
+  order_created:        'whatsapp_template_order_created',
+  price_confirmation:   'whatsapp_template_price_confirmation',
+  order_dispatched:     'whatsapp_template_dispatched',
+  order_delivered:      'whatsapp_template_delivered',
+  order_cancelled:      'whatsapp_template_cancelled',
 }
+
+// ── Default templates (fallback) ──────────────────────────────
+const DEFAULT_TEMPLATES = {
+  order_created: 'Olá {nome_cliente}! 👋\n\nRecebemos o seu pedido de *{medicamento}*.\n\nAcompanhe o estado aqui: {link_tracking}\n\nEntraremos em contacto em breve para confirmar disponibilidade e preço.\n\n— MedGo',
+  price_confirmation: 'Olá {nome_cliente}! 💊\n\nTemos boas notícias sobre o seu pedido de *{medicamento}*.\n\nPreço total (incluindo entrega): *{preco_total}*\n\nPara confirmar, responda *SIM* a esta mensagem. Caso não pretenda, responda *NÃO*.\n\nTem 30 minutos para responder.\n\nAcompanhe aqui: {link_tracking}\n\n— MedGo',
+  order_dispatched: 'Olá {nome_cliente}! 🛵\n\nO seu pedido de *{medicamento}* está a caminho!\n\nO nosso motoboy encontra-se a dirigir-se à sua morada. Fique disponível.\n\nAcompanhe: {link_tracking}\n\n— MedGo',
+  order_delivered: 'Olá {nome_cliente}! ✅\n\nO seu pedido de *{medicamento}* foi entregue com sucesso.\n\nObrigado por confiar na MedGo! Qualquer questão, estamos à disposição.\n\n— MedGo',
+  order_cancelled: 'Olá {nome_cliente}.\n\nLamentamos informar que o seu pedido de *{medicamento}* foi cancelado.\n\nMotivo: {motivo}\n\nPara qualquer questão, contacte-nos. Estamos aqui para ajudar.\n\n— MedGo',
+}
+
+// ── Variable interpolation ────────────────────────────────────
 
 function formatMZN(amount) {
   if (!amount) return '—'
   return new Intl.NumberFormat('pt-MZ', {
-    style: 'currency',
-    currency: 'MZN',
-    minimumFractionDigits: 2,
+    style: 'currency', currency: 'MZN', minimumFractionDigits: 0,
   }).format(amount)
 }
 
 /**
+ * Replace {variables} in a template string with actual values.
+ * Variables: {nome_cliente}, {medicamento}, {link_tracking},
+ *            {preco_total}, {taxa_entrega}, {motivo}
+ */
+function interpolate(template, data) {
+  const { order, customer, trackingUrl } = data
+  return template
+    .replace(/\{nome_cliente\}/g, customer?.full_name || 'Cliente')
+    .replace(/\{medicamento\}/g,  order?.medication_name_snapshot || '—')
+    .replace(/\{link_tracking\}/g, trackingUrl || '')
+    .replace(/\{preco_total\}/g,  formatMZN(order?.total_price))
+    .replace(/\{taxa_entrega\}/g, formatMZN(order?.delivery_fee))
+    .replace(/\{motivo\}/g,       order?.cancellation_reason || 'Não especificado')
+}
+
+// ── Send ──────────────────────────────────────────────────────
+
+/**
  * Send a WhatsApp notification.
- * Fails silently — never block the main order flow.
+ * Fails silently — never blocks the main order flow.
  *
- * @param {string} templateKey - Key from TEMPLATES object
- * @param {object} data        - Data passed to template function
+ * @param {string} templateKey — one of: order_created, price_confirmation,
+ *                               order_dispatched, order_delivered, order_cancelled
+ * @param {object} data        — { order, customer, trackingUrl }
  */
 export async function sendNotification(templateKey, data) {
   try {
-    const apiUrl = await getConfig('whatsapp_api_url')
-    const senderNumber = await getConfig('whatsapp_sender_number')
+    const config = await getWhatsAppConfig()
 
-    if (!apiUrl || !senderNumber) {
-      // WhatsApp not configured yet — log and skip
-      console.info('[Notification] WhatsApp not configured. Skipping:', templateKey)
+    const apiUrl = config.whatsapp_api_url
+    if (!apiUrl) {
+      console.info('[Notification] WhatsApp API not configured. Skipping:', templateKey)
       return { sent: false, reason: 'not_configured' }
     }
 
-    const template = TEMPLATES[templateKey]
-    if (!template) {
-      console.warn('[Notification] Unknown template:', templateKey)
+    // Resolve template: system_config first, fallback to default
+    const configKey = TEMPLATE_CONFIG_KEY[templateKey]
+    const templateText = (configKey && config[configKey])
+      ? config[configKey]
+      : DEFAULT_TEMPLATES[templateKey]
+
+    if (!templateText) {
+      console.warn('[Notification] Unknown template key:', templateKey)
       return { sent: false, reason: 'unknown_template' }
     }
 
-    const message = template(data)
+    const message = interpolate(templateText, data)
     const recipientPhone = data.customer?.whatsapp_number
-
     if (!recipientPhone) {
       console.warn('[Notification] No recipient phone for:', templateKey)
       return { sent: false, reason: 'no_phone' }
     }
 
+    // Build headers — include token if configured
+    const headers = { 'Content-Type': 'application/json' }
+    if (config.whatsapp_api_token) {
+      headers['Authorization'] = `Bearer ${config.whatsapp_api_token}`
+      headers['client-token']  = config.whatsapp_api_token  // Z-API uses this header
+    }
+
     const response = await fetch(apiUrl, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers,
       body: JSON.stringify({
-        phone: recipientPhone,
+        phone: recipientPhone.replace(/[\s\-()]/g, ''),
         message,
-        from: senderNumber,
       }),
     })
 
@@ -105,7 +132,6 @@ export async function sendNotification(templateKey, data) {
 
     return { sent: true }
   } catch (err) {
-    // Silent fail — notifications must never crash business logic
     console.warn('[Notification] Failed:', templateKey, err?.message)
     return { sent: false, reason: 'exception' }
   }
@@ -115,6 +141,12 @@ export async function sendNotification(templateKey, data) {
  * Build the public tracking URL for a given tracking token.
  */
 export async function buildTrackingUrl(trackingToken) {
-  const base = await getConfig('tracking_base_url')
-  return `${base || 'https://medgo.co.mz/acompanhar'}/${trackingToken}`
+  const { data } = await supabase
+    .from('system_config')
+    .select('value')
+    .eq('key', 'tracking_base_url')
+    .single()
+
+  const base = data?.value || 'https://medgo.co.mz/acompanhar'
+  return `${base}/${trackingToken}`
 }

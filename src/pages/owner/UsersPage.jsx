@@ -7,9 +7,10 @@ import { Alert } from '../../components/ui/Alert'
 import { Spinner } from '../../components/ui/Spinner'
 
 const ROLE_META = {
-  owner:    { label: 'Proprietário', dot: 'bg-violet-500', badge: 'bg-violet-50 text-violet-700' },
-  operator: { label: 'Operador',     dot: 'bg-teal-500',   badge: 'bg-teal-50 text-teal-700' },
-  motoboy:  { label: 'Motoboy',      dot: 'bg-orange-500', badge: 'bg-orange-50 text-orange-700' },
+  owner:         { label: 'Proprietário',    dot: 'bg-violet-500', badge: 'bg-violet-50 text-violet-700' },
+  operator:      { label: 'Operador',        dot: 'bg-teal-500',   badge: 'bg-teal-50 text-teal-700' },
+  motoboy:       { label: 'Motoboy',         dot: 'bg-orange-500', badge: 'bg-orange-50 text-orange-700' },
+  stock_manager: { label: 'Gestor de Stock', dot: 'bg-blue-500',   badge: 'bg-blue-50 text-blue-700' },
 }
 
 function IPlus() { return <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4"/></svg> }
@@ -37,9 +38,6 @@ function UserForm({ initial, onSave, onCancel, loading }) {
 
   return (
     <div className="space-y-4">
-      <Alert type="info">
-        A criação de utilizadores requer acesso à consola do Supabase para definir credenciais de email/senha. Aqui pode editar os dados de perfil.
-      </Alert>
       <div>
         <label className="label">Nome completo <span className="text-red-500">*</span></label>
         <input value={form.full_name} onChange={e => set('full_name', e.target.value)} placeholder="Nome do membro da equipa" className={`input ${errors.full_name ? 'border-red-300' : ''}`} />
@@ -54,6 +52,7 @@ function UserForm({ initial, onSave, onCancel, loading }) {
         <select value={form.role} onChange={e => set('role', e.target.value)} className="input">
           <option value="operator">Operador</option>
           <option value="motoboy">Motoboy</option>
+          <option value="stock_manager">Gestor de Stock</option>
           <option value="owner">Proprietário</option>
         </select>
         {errors.role && <p className="field-error">{errors.role}</p>}
@@ -126,10 +125,191 @@ function UserCard({ user, onEdit, onToggle }) {
   )
 }
 
+// ── Invite form ────────────────────────────────────────────────
+
+function generateTempPassword() {
+  const chars = 'ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#$'
+  return Array.from({ length: 12 }, () => chars[Math.floor(Math.random() * chars.length)]).join('')
+}
+
+function InviteForm({ onDone, onCancel }) {
+  const notify = useNotificationStore()
+  const qc = useQueryClient()
+  const [form, setForm] = useState({ email: '', full_name: '', phone: '', role: 'operator' })
+  const [errors, setErrors] = useState({})
+  const [loading, setLoading] = useState(false)
+  const [success, setSuccess] = useState(null) // { email, tempPassword }
+
+  const set = (k, v) => { setForm(f => ({ ...f, [k]: v })); setErrors(e => ({ ...e, [k]: '' })) }
+
+  const validate = () => {
+    const e = {}
+    if (!form.email.trim()) e.email = 'Email obrigatório'
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) e.email = 'Email inválido'
+    if (!form.full_name.trim()) e.full_name = 'Nome obrigatório'
+    return e
+  }
+
+  const handleInvite = async () => {
+    const e = validate()
+    if (Object.keys(e).length) { setErrors(e); return }
+
+    setLoading(true)
+    try {
+      const tempPassword = generateTempPassword()
+
+      // Create the auth user with signUp.
+      // If "Email Confirmation" is ON in Supabase, the user is created but
+      // needs to confirm before logging in. We handle both cases below.
+      const { data: authData, error: authErr } = await supabase.auth.signUp({
+        email: form.email.trim().toLowerCase(),
+        password: tempPassword,
+      })
+
+      if (authErr) throw new Error(authErr.message)
+
+      // authData.user can be null if the email already exists in Supabase
+      // (Supabase returns null silently to prevent user enumeration)
+      if (!authData?.user) {
+        throw new Error(
+          'Não foi possível criar o utilizador. ' +
+          'O email já pode estar registado. Verifique na consola do Supabase.'
+        )
+      }
+
+      // Upsert the profile with the correct role.
+      // This works even if email confirmation is pending — the UUID is valid.
+      const { error: profileErr } = await supabase.from('profiles').upsert({
+        id: authData.user.id,
+        full_name: form.full_name.trim(),
+        phone: form.phone.trim() || null,
+        role: form.role,
+        is_active: true,
+      }, { onConflict: 'id' })
+
+      if (profileErr) throw new Error('Utilizador criado mas erro ao configurar perfil: ' + profileErr.message)
+
+      qc.invalidateQueries({ queryKey: ['team-users'] })
+
+      // Detect if email confirmation is required (user not yet confirmed)
+      const needsConfirmation = !authData.session
+
+      setSuccess({ email: form.email.trim(), tempPassword, needsConfirmation })
+    } catch (err) {
+      notify.error(err.message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  if (success) {
+    return (
+      <div className="space-y-4">
+        <div className="flex items-center gap-3 rounded-2xl bg-teal-50 border border-teal-200 p-4">
+          <div className="w-8 h-8 rounded-full bg-teal-500 flex items-center justify-center shrink-0">
+            <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7"/>
+            </svg>
+          </div>
+          <div>
+            <p className="text-sm font-extrabold text-teal-900">Utilizador criado com sucesso</p>
+            <p className="text-xs text-teal-700 mt-0.5">{success.email}</p>
+          </div>
+        </div>
+
+        {/* Email confirmation warning */}
+        {success.needsConfirmation && (
+          <Alert type="warning">
+            O Supabase tem confirmação de email activa. O utilizador receberá um email de confirmação e <strong>só consegue fazer login após confirmar</strong>. Para desactivar: Supabase → Authentication → Settings → desligar "Enable email confirmations".
+          </Alert>
+        )}
+
+        <div className="rounded-2xl border border-orange-200 bg-orange-50 p-4 space-y-2">
+          <p className="text-xs font-extrabold uppercase tracking-widest text-orange-700">Credenciais temporárias</p>
+          <p className="text-sm text-orange-800">Partilhe estas credenciais de forma segura. O membro deve alterar a senha após o primeiro acesso.</p>
+          <div className="mt-2 space-y-1.5">
+            <div className="flex items-center justify-between rounded-lg bg-white border border-orange-100 px-3 py-2">
+              <span className="text-xs text-orange-600 font-medium">Email</span>
+              <span className="font-mono text-sm font-semibold text-slate-800">{success.email}</span>
+            </div>
+            <div className="flex items-center justify-between rounded-lg bg-white border border-orange-100 px-3 py-2">
+              <span className="text-xs text-orange-600 font-medium">Senha temp.</span>
+              <span className="font-mono text-sm font-extrabold text-slate-800 tracking-wider select-all">{success.tempPassword}</span>
+            </div>
+          </div>
+          <p className="text-xs text-orange-600 font-medium pt-1">Guarde esta janela até o membro confirmar o acesso.</p>
+        </div>
+
+        <div className="flex gap-3">
+          <button onClick={() => { setForm({ email:'', full_name:'', phone:'', role:'operator' }); setSuccess(null) }} className="btn-secondary flex-1">
+            Convidar outro
+          </button>
+          <button onClick={onDone} className="btn-primary flex-1">Concluir</button>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-4">
+      <div>
+        <label className="label">Email <span className="text-red-500">*</span></label>
+        <input
+          type="email"
+          value={form.email}
+          onChange={e => set('email', e.target.value)}
+          placeholder="email@exemplo.com"
+          className={`input ${errors.email ? 'border-red-300' : ''}`}
+          autoComplete="off"
+        />
+        {errors.email && <p className="field-error">{errors.email}</p>}
+      </div>
+      <div>
+        <label className="label">Nome completo <span className="text-red-500">*</span></label>
+        <input
+          value={form.full_name}
+          onChange={e => set('full_name', e.target.value)}
+          placeholder="Nome do membro da equipa"
+          className={`input ${errors.full_name ? 'border-red-300' : ''}`}
+        />
+        {errors.full_name && <p className="field-error">{errors.full_name}</p>}
+      </div>
+      <div>
+        <label className="label">Telemóvel</label>
+        <input
+          value={form.phone}
+          onChange={e => set('phone', e.target.value)}
+          placeholder="+258 8X XXX XXXX"
+          className="input"
+          type="tel"
+        />
+      </div>
+      <div>
+        <label className="label">Papel <span className="text-red-500">*</span></label>
+        <select value={form.role} onChange={e => set('role', e.target.value)} className="input">
+          <option value="operator">Operador</option>
+          <option value="motoboy">Motoboy</option>
+          <option value="stock_manager">Gestor de Stock</option>
+          <option value="owner">Proprietário</option>
+        </select>
+      </div>
+      <Alert type="info">
+        Será gerada uma senha temporária. Partilhe-a de forma segura — o membro da equipa deverá alterá-la no primeiro acesso.
+      </Alert>
+      <div className="flex gap-3 pt-1">
+        <button onClick={onCancel} className="btn-secondary flex-1">Cancelar</button>
+        <button onClick={handleInvite} disabled={loading} className="btn-primary flex-1">
+          {loading ? <><Spinner size="sm" /> A criar...</> : 'Criar utilizador'}
+        </button>
+      </div>
+    </div>
+  )
+}
+
 export function UsersPage() {
   const notify = useNotificationStore()
   const qc = useQueryClient()
-  const [modal, setModal] = useState(null) // null | 'create' | user_obj
+  const [modal, setModal] = useState(null) // null | 'invite' | user_obj
   const [roleFilter, setRoleFilter] = useState('ALL')
 
   const { data: users = [], isLoading } = useQuery({
@@ -156,7 +336,10 @@ export function UsersPage() {
 
   const handleSaveEdit = async (form) => {
     try {
-      await updateMutation.mutateAsync({ id: modal.id, payload: { full_name: form.full_name, phone: form.phone || null, role: form.role, is_active: form.is_active } })
+      await updateMutation.mutateAsync({
+        id: modal.id,
+        payload: { full_name: form.full_name, phone: form.phone || null, role: form.role, is_active: form.is_active },
+      })
       notify.success('Utilizador actualizado.')
       setModal(null)
     } catch (err) { notify.error(err.message) }
@@ -171,6 +354,9 @@ export function UsersPage() {
 
   const filtered = roleFilter === 'ALL' ? users : users.filter(u => u.role === roleFilter)
   const counts = users.reduce((acc, u) => { acc[u.role] = (acc[u.role] || 0) + 1; return acc }, {})
+
+  const isInviteModal = modal === 'invite'
+  const isEditModal = modal && modal !== 'invite'
 
   return (
     <div className="max-w-5xl mx-auto px-4 md:px-6 py-6 pb-10 space-y-6">
@@ -198,36 +384,43 @@ export function UsersPage() {
         </div>
       </div>
 
-      {/* Info note */}
-      <Alert type="info" title="Gestão de acesso">
-        Para criar novos utilizadores com email/senha, aceda à consola do Supabase → Authentication → Users. Após criar, o perfil fica disponível aqui para editar o nome, telefone e papel.
-      </Alert>
-
-      {/* Role filter tabs */}
-      <div className="flex gap-2 flex-wrap">
-        {[
-          { value: 'ALL', label: 'Todos' },
-          { value: 'operator', label: 'Operadores' },
-          { value: 'motoboy', label: 'Motoboys' },
-          { value: 'owner', label: 'Proprietários' },
-        ].map(tab => (
-          <button
-            key={tab.value}
-            onClick={() => setRoleFilter(tab.value)}
-            className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
-              roleFilter === tab.value
-                ? 'bg-teal-500 text-white shadow-sm'
-                : 'bg-white border border-slate-200 text-slate-600 hover:border-teal-200'
-            }`}
-          >
-            {tab.label}
-            {tab.value !== 'ALL' && counts[tab.value] > 0 && (
-              <span className={`ml-1.5 text-xs ${roleFilter === tab.value ? 'text-white/70' : 'text-slate-400'}`}>
-                {counts[tab.value]}
-              </span>
-            )}
-          </button>
-        ))}
+      {/* Actions row */}
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex gap-2 flex-wrap">
+          {[
+            { value: 'ALL',           label: 'Todos' },
+            { value: 'operator',      label: 'Operadores' },
+            { value: 'motoboy',       label: 'Motoboys' },
+            { value: 'stock_manager', label: 'Stock' },
+            { value: 'owner',         label: 'Proprietários' },
+          ].map(tab => (
+            <button
+              key={tab.value}
+              onClick={() => setRoleFilter(tab.value)}
+              className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
+                roleFilter === tab.value
+                  ? 'bg-teal-500 text-white shadow-sm'
+                  : 'bg-white border border-slate-200 text-slate-600 hover:border-teal-200'
+              }`}
+            >
+              {tab.label}
+              {tab.value !== 'ALL' && counts[tab.value] > 0 && (
+                <span className={`ml-1.5 text-xs ${roleFilter === tab.value ? 'text-white/70' : 'text-slate-400'}`}>
+                  {counts[tab.value]}
+                </span>
+              )}
+            </button>
+          ))}
+        </div>
+        <button
+          onClick={() => setModal('invite')}
+          className="btn-primary shrink-0 flex items-center gap-2"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
+          </svg>
+          Convidar membro
+        </button>
       </div>
 
       {/* List */}
@@ -235,9 +428,19 @@ export function UsersPage() {
         <div className="flex justify-center py-16"><Spinner size="lg" /></div>
       ) : filtered.length === 0 ? (
         <div className="card p-14 text-center">
-          <div className="text-5xl mb-4">👥</div>
+          <div className="w-14 h-14 rounded-2xl bg-slate-100 flex items-center justify-center mx-auto mb-4">
+            <svg className="w-7 h-7 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-1a4 4 0 00-5.356-3.77M9 20H4v-1a4 4 0 015.356-3.77M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+            </svg>
+          </div>
           <p className="font-extrabold text-slate-700 mb-1">Sem utilizadores nesta categoria</p>
-          <p className="text-sm text-slate-400">Crie utilizadores via Supabase e edite os perfis aqui.</p>
+          <p className="text-sm text-slate-400 mb-4">Convide o primeiro membro da equipa para começar.</p>
+          <button onClick={() => setModal('invite')} className="btn-primary inline-flex">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
+            </svg>
+            Convidar membro
+          </button>
         </div>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -247,9 +450,14 @@ export function UsersPage() {
         </div>
       )}
 
+      {/* Invite modal */}
+      <Modal open={isInviteModal} onClose={() => setModal(null)} title="Convidar membro da equipa" size="sm">
+        <InviteForm onDone={() => setModal(null)} onCancel={() => setModal(null)} />
+      </Modal>
+
       {/* Edit modal */}
-      <Modal open={!!modal} onClose={() => setModal(null)} title="Editar perfil" size="sm">
-        {modal && (
+      <Modal open={isEditModal} onClose={() => setModal(null)} title="Editar perfil" size="sm">
+        {isEditModal && (
           <UserForm
             initial={modal}
             onSave={handleSaveEdit}
